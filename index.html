@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Hasło</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Rajdhani', sans-serif;
+    background: #0a0c10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 20px;
+    overflow: hidden;
+    background-image: url('tlo.jpg');
+    background-size: cover;
+    background-position: center;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 75% 85%, rgba(243,156,18,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .row {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .card {
+    width: 115px;
+    height: 115px;
+    border-radius: 14px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #3a2800;
+    background: #1a1200;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    overflow: hidden;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .card:hover {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 0 20px rgba(243,156,18,0.25);
+    border-color: #c07a00;
+  }
+
+  .card:active { transform: scale(0.96); }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .face-default .q {
+    font-size: 44px;
+    font-weight: 700;
+    color: #c07a00;
+    text-shadow: 0 0 18px rgba(243,156,18,0.4);
+    animation: qpulse 2.5s ease-in-out infinite;
+  }
+  @keyframes qpulse {
+    0%,100% { opacity:.55; transform:scale(1); }
+    50% { opacity:1; transform:scale(1.08); }
+  }
+
+  .face-question {
+    background: linear-gradient(140deg, rgba(243,156,18,0.22), rgba(160,90,0,0.28));
+    border: 2px solid rgba(243,156,18,0.45);
+    padding: 10px;
+    text-align: center;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    font-weight: 400;
+    line-height: 1.4;
+    color: #ffd580;
+  }
+
+  .face-letter {
+    background: linear-gradient(140deg, rgba(243,156,18,0.30), rgba(200,110,0,0.40));
+    border: 2px solid #f39c12;
+    box-shadow: inset 0 0 24px rgba(243,156,18,0.2), 0 0 18px rgba(243,156,18,0.35);
+  }
+  .face-letter .ltr {
+    font-size: 58px;
+    font-weight: 700;
+    color: #ffd580;
+    text-shadow: 0 0 16px #f39c12, 0 0 36px rgba(243,156,18,0.5);
+    animation: ltrin 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes ltrin {
+    0% { transform:scale(0.2) rotate(-20deg); opacity:0; }
+    100% { transform:scale(1) rotate(0); opacity:1; }
+  }
+
+  .card[data-state="default"] .face-question,
+  .card[data-state="default"] .face-letter { opacity:0; pointer-events:none; transform:scale(0.85); }
+
+  .card[data-state="question"] .face-default,
+  .card[data-state="question"] .face-letter { opacity:0; pointer-events:none; }
+  .card[data-state="question"] .face-question { opacity:1; transform:scale(1); }
+
+  .card[data-state="letter"] .face-default,
+  .card[data-state="letter"] .face-question { opacity:0; pointer-events:none; }
+  .card[data-state="letter"] .face-letter { opacity:1; transform:scale(1); }
+
+  .particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 50;
+    animation: pfly var(--d) ease-out forwards;
+  }
+  @keyframes pfly {
+    0%   { transform:translate(0,0) scale(1); opacity:1; }
+    100% { transform:translate(var(--tx),var(--ty)) scale(0); opacity:0; }
+  }
+
+  #flash {
+    position:fixed; inset:0; z-index:99;
+    pointer-events:none; opacity:0;
+  }
+  #flash.go { animation: flashanim 3.5s ease forwards; }
+  @keyframes flashanim {
+    0%   { opacity:0; background:transparent; }
+    8%   { opacity:1; background:radial-gradient(ellipse at center, rgba(255,200,50,.9) 0%, rgba(243,156,18,.6) 40%, transparent 70%); }
+    18%  { background:#fff; opacity:1; }
+    28%  { background:radial-gradient(ellipse at center, #ffd580 0%, rgba(243,156,18,.7) 50%, rgba(0,0,0,.3) 100%); }
+    40%  { background:#fff; opacity:.85; }
+    55%  { opacity:.6; background:radial-gradient(ellipse at center, rgba(243,156,18,.4) 0%, transparent 60%); }
+    100% { opacity:0; }
+  }
+
+  #win-msg {
+    position:fixed; inset:0; z-index:100;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    pointer-events:none; opacity:0; gap:10px;
+  }
+  #win-msg.go { animation: wmsg 3.5s ease forwards; }
+  @keyframes wmsg {
+    0%   { opacity:0; transform:scale(.4); }
+    20%  { opacity:1; transform:scale(1.08); }
+    35%  { transform:scale(1); }
+    70%  { opacity:1; }
+    100% { opacity:0; }
+  }
+  .wt {
+    font-size: clamp(60px,12vw,110px);
+    font-weight:700; color:#fff;
+    text-shadow: 0 0 20px #f39c12, 0 0 50px #f39c12, 0 0 100px rgba(243,156,18,.5);
+    letter-spacing:6px; text-align:center;
+  }
+  .ws {
+    font-size:clamp(14px,3vw,24px); color:#ffd580;
+    letter-spacing:5px; text-transform:uppercase;
+    text-shadow:0 0 16px #f39c12; text-align:center;
+  }
+
+  @media(max-width:500px) {
+    .card { width:88px; height:88px; }
+    .face-question { font-size:10.5px; }
+    .face-letter .ltr { font-size:46px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+<div id="win-msg">
+  <div class="wt">BRAWO!</div>
+  <div class="ws">Hasło odgadnięte!</div>
+</div>
+
+<div class="row" id="row1"></div>
+<div class="row" id="row2"></div>
+<div class="row" id="row3"></div>
+
+<script>
+const data = [
+  { letter:"M", question:"Decyzja: szybko czy dokładnie?" },
+  { letter:"A", question:"Plan czy spontaniczność?" },
+  { letter:"M", question:"Ryzyko czy bezpieczeństwo?" },
+  { letter:"S", question:"Praca solo czy w grupie?" },
+  { letter:"U", question:"Logika czy intuicja?" },
+  { letter:"P", question:"Pieniądze czy pasja?" },
+  { letter:"E", question:"Stabilność czy zmiana?" },
+  { letter:"R", question:"Serce czy rozum?" },
+  { letter:"M", question:"Plan czy improwizacja?" },
+  { letter:"O", question:"Komfort czy rozwój?" },
+  { letter:"C", question:"Szybki efekt czy długi sukces?" },
+  { letter:"E", question:"Perfekcja czy działanie?" }
+];
+
+const layout = [3, 5, 4];
+const rowEls = ["row1","row2","row3"].map(id => document.getElementById(id));
+let revealed = 0;
+
+function makeCard(item) {
+  const card = document.createElement("div");
+  card.className = "card"; card.dataset.state = "default";
+
+  const fd = document.createElement("div"); fd.className = "face face-default";
+  const q = document.createElement("div"); q.className = "q"; q.textContent = "?";
+  fd.appendChild(q);
+
+  const fq = document.createElement("div"); fq.className = "face face-question";
+  fq.textContent = item.question;
+
+  const fl = document.createElement("div"); fl.className = "face face-letter";
+  const l = document.createElement("div"); l.className = "ltr"; l.textContent = item.letter;
+  fl.appendChild(l);
+
+  card.appendChild(fd); card.appendChild(fq); card.appendChild(fl);
+
+  card.addEventListener("click", () => {
+    const s = card.dataset.state;
+    if (s === "default") {
+      card.dataset.state = "question";
+    } else if (s === "question") {
+      card.dataset.state = "letter";
+      sparks(card);
+      revealed++;
+      if (revealed === 12) setTimeout(win, 500);
+    } else {
+      card.dataset.state = "default";
+      revealed = Math.max(0, revealed - 1);
+    }
+  });
+  return card;
+}
+
+let idx = 0;
+layout.forEach((n, ri) => {
+  for (let i = 0; i < n; i++) rowEls[ri].appendChild(makeCard(data[idx++]));
+});
+
+function sparks(el) {
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  const colors = ['#f39c12','#ffd580','#ff8c00','#ffffff'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement("div"); p.className = "particle";
+    const angle = (i/18)*360, dist = 50 + Math.random()*70;
+    const sz = 3 + Math.random()*6;
+    p.style.cssText = `left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;background:${colors[~~(Math.random()*colors.length)]};--tx:${Math.cos(angle*Math.PI/180)*dist}px;--ty:${Math.sin(angle*Math.PI/180)*dist}px;--d:${.5+Math.random()*.6}s`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+}
+
+function win() {
+  for (let i = 0; i < 100; i++) {
+    setTimeout(() => {
+      const p = document.createElement("div"); p.className = "particle";
+      const sz = 4 + Math.random()*10;
+      const colors = ['#f39c12','#ffd580','#ff8c00','#fff','#ffcc44'];
+      p.style.cssText = `left:${Math.random()*window.innerWidth}px;top:${Math.random()*window.innerHeight}px;width:${sz}px;height:${sz}px;background:${colors[~~(Math.random()*colors.length)]};--tx:${(Math.random()-.5)*400}px;--ty:${(Math.random()-.5)*400}px;--d:${.8+Math.random()*1.4}s`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 2200);
+    }, i*25);
+  }
+  const f = document.getElementById("flash"), m = document.getElementById("win-msg");
+  f.classList.add("go"); m.classList.add("go");
+  setTimeout(() => { f.classList.remove("go"); m.classList.remove("go"); }, 3600);
+}
+</script>
+</body>
+</html>
