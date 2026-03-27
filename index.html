@@ -228,7 +228,7 @@ const AUDIO_URL = "piosenka.mp3"; // ← wklej tutaj URL do pliku audio
 
 const data = [
   { letter:"M", question:"Decyzja: szybko czy dokładnie?" },
-  { letter:"A", question:"Plan czy działadnie?" },
+  { letter:"A", question:"Plan czy działanie?" },
   { letter:"M", question:"Dane czy intuicja?" },
   { letter:"S", question:"Rozwaga czy vabank?" },
   { letter:"U", question:"Tempo czy balans?" },
@@ -246,6 +246,23 @@ const rowEls = ["row1","row2","row3"].map(id => document.getElementById(id));
 const allCards = [];
 let revealed = 0;
 let won = false;
+
+// Audio – tworzymy obiekt z góry, żeby przeglądarka nie blokował autoplay
+let audio = null;
+if (AUDIO_URL) {
+  try {
+    audio = new Audio(AUDIO_URL);
+    audio.volume = 0.85;
+    audio.preload = "auto";
+  } catch(e) {}
+}
+
+function playMusic() {
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  }
+}
 
 const COLORS = ['#FE560E','#ff7a3d','#ff9a6c','#ff3d00','#ffcbb0','#ffffff','#ffb347','#ff6600'];
 
@@ -274,6 +291,9 @@ function makeCard(item, num) {
       card.dataset.state = "letter";
       sparks(card, 18);
       revealed++;
+      // Muzyka odpala się natychmiast przy ostatniej karcie,
+      // zanim jeszcze wejdzie animacja (400ms delay w triggerWin)
+      if (revealed >= 12 && !won) playMusic();
       checkWin();
     } else {
       card.dataset.state = "default";
@@ -297,6 +317,9 @@ layout.forEach((n, ri) => {
 document.getElementById("btn-reveal").addEventListener("click", async () => {
   const btn = document.getElementById("btn-reveal");
   btn.disabled = true;
+  // Muzyka odpala się od razu po kliknięciu przycisku,
+  // zanim jeszcze karty zaczną się odkrywać
+  if (!won) playMusic();
   for (let i = 0; i < allCards.length; i++) {
     const card = allCards[i];
     if (card.dataset.state !== "letter") {
@@ -395,14 +418,7 @@ function particleRain(count) {
 
 // ── WIN ──
 function triggerWin() {
-  // Audio
-  if (AUDIO_URL) {
-    try {
-      const audio = new Audio(AUDIO_URL);
-      audio.volume = 0.85;
-      audio.play().catch(() => {});
-    } catch(e) {}
-  }
+  // Muzyka już gra – NIE odpala jej ponownie tutaj
 
   const cx = window.innerWidth / 2;
   const cy = window.innerHeight / 2;
